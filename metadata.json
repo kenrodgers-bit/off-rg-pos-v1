@@ -1,0 +1,6 @@
+{
+  "name": "RG POS",
+  "description": "Offline-first POS and business management for retail and wholesale Kenyan businesses",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
