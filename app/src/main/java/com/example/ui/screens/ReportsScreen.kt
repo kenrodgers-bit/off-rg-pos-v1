@@ -53,6 +53,18 @@ enum class DateFilterPreset(val label: String) {
     CUSTOM("Custom Range")
 }
 
+// One row per product + selling form (e.g. "Sweets" sold as "Carton" vs "Pack" vs "Piece"),
+// scoped to whatever report filters are currently active.
+data class SellingFormBreakdownRow(
+    val productName: String,
+    val unitName: String,
+    val quantitySold: Double,
+    val baseUnitsSold: Double,
+    val revenue: Double,
+    val cost: Double,
+    val profit: Double
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(
@@ -62,6 +74,7 @@ fun ReportsScreen(
 
     val business by viewModel.business.collectAsStateWithLifecycle()
     val allCompletedSales by viewModel.allCompletedSales.collectAsStateWithLifecycle()
+    val allSaleItems by viewModel.allSaleItems.collectAsStateWithLifecycle()
     val allExpenses by viewModel.allExpenses.collectAsStateWithLifecycle()
     val allPayments by viewModel.allPayments.collectAsStateWithLifecycle()
     val allReturns by viewModel.allReturns.collectAsStateWithLifecycle()
@@ -235,6 +248,30 @@ fun ReportsScreen(
         }
     }
 
+    // Sales broken down by product + selling form (packaging unit), respecting all active filters.
+    // Answers: how many cartons vs packs vs pieces were sold, with base-unit, revenue, cost and profit.
+    val sellingFormBreakdown = remember(finalFilteredSales, allSaleItems) {
+        val saleIds = finalFilteredSales.map { it.id }.toSet()
+        allSaleItems
+            .filter { it.saleId in saleIds }
+            .groupBy { it.productName to it.unitName }
+            .map { (key, items) ->
+                val (productName, unitName) = key
+                val revenue = items.sumOf { it.subtotal }
+                val cost = items.sumOf { it.costPrice * it.quantity }
+                SellingFormBreakdownRow(
+                    productName = productName,
+                    unitName = unitName,
+                    quantitySold = items.sumOf { it.quantity },
+                    baseUnitsSold = items.sumOf { it.baseQuantityDeducted },
+                    revenue = revenue,
+                    cost = cost,
+                    profit = revenue - cost
+                )
+            }
+            .sortedWith(compareBy({ it.productName }, { it.unitName }))
+    }
+
     // Filter Expenses by date
     val filteredExpenses = remember(allExpenses, rangeStartEpoch, rangeEndEpoch) {
         allExpenses.filter { it.dateEpoch in rangeStartEpoch..rangeEndEpoch }
@@ -382,7 +419,18 @@ fun ReportsScreen(
                             filters = filters,
                             summary = paymentBreakdown,
                             sales = finalFilteredSales,
-                            payments = allPayments
+                            payments = allPayments,
+                            sellingFormRows = sellingFormBreakdown.map { row ->
+                                com.example.util.SellingFormExportRow(
+                                    productName = row.productName,
+                                    unitName = row.unitName,
+                                    quantitySold = row.quantitySold,
+                                    baseUnitsSold = row.baseUnitsSold,
+                                    revenue = row.revenue,
+                                    cost = row.cost,
+                                    profit = row.profit
+                                )
+                            }
                         )
                         ReportExporter.shareReport(context, file)
                     },
@@ -841,6 +889,68 @@ fun ReportsScreen(
                             ) {
                                 Text("Avg Ticket: ${CurrencyFormatter.format(avg)}", color = TextMuted, fontSize = 11.sp)
                                 Text("Discounts: ${CurrencyFormatter.format(disc)}", color = WarningOrange, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sales by Selling Form (e.g. Carton vs Pack vs Piece), respecting active filters
+        if (sellingFormBreakdown.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder),
+                modifier = Modifier.fillMaxWidth().testTag("selling_form_breakdown_card")
+            ) {
+                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "SALES BY SELLING FORM",
+                        color = TextMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "Quantity and revenue per packaging form sold (e.g. carton vs pack vs piece)",
+                        color = TextMuted,
+                        fontSize = 11.sp
+                    )
+
+                    sellingFormBreakdown.forEach { row ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DarkSurfaceElevated)
+                                .padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(row.productName, color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text(row.unitName, color = RgAccent, fontSize = 12.sp)
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                val qtyText = if (row.quantitySold % 1.0 == 0.0) row.quantitySold.toInt().toString() else "%.1f".format(row.quantitySold)
+                                val baseText = if (row.baseUnitsSold % 1.0 == 0.0) row.baseUnitsSold.toInt().toString() else "%.1f".format(row.baseUnitsSold)
+                                Text(
+                                    "Sold: $qtyText ${row.unitName} (= $baseText base units)",
+                                    color = TextMuted,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Revenue: ${CurrencyFormatter.format(row.revenue)}", color = TextMuted, fontSize = 12.sp)
+                                Text("Profit: ${CurrencyFormatter.format(row.profit)}", color = SuccessGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

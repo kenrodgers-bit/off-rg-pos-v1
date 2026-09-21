@@ -17,6 +17,7 @@ class PosRepository(val db: AppDatabase) {
     val allSuppliers: Flow<List<Supplier>> = db.supplierDao().getAllSuppliers()
     val recentSales: Flow<List<Sale>> = db.saleDao().getRecentCompletedSales()
     val allCompletedSales: Flow<List<Sale>> = db.saleDao().getAllCompletedSalesFlow()
+    val allSaleItems: Flow<List<SaleItem>> = db.saleDao().getAllSaleItemsFlow()
     val heldSales: Flow<List<Sale>> = db.saleDao().getHeldSales()
     val allExpenses: Flow<List<Expense>> = db.expenseDao().getAllExpenses()
     val activeCashSession: Flow<CashSession?> = db.cashSessionDao().getActiveSessionFlow()
@@ -390,11 +391,32 @@ class PosRepository(val db: AppDatabase) {
         val itemsWithId = items.map { it.copy(purchaseId = purchaseId) }
         db.purchaseDao().insertPurchaseItems(itemsWithId)
 
+        val costingMethod = db.businessDao().getBusiness()?.costingMethod ?: "WEIGHTED_AVERAGE"
+
         for (item in itemsWithId) {
             val product = db.productDao().getProductById(item.productId)
             if (product != null) {
                 val newStock = product.currentStockBase + item.baseUnitsAdded
                 db.productDao().updateStock(product.id, item.baseUnitsAdded)
+
+                // Recalculate cost-per-base-unit so profit/margin figures reflect actual
+                // purchase cost rather than staying frozen at the product's original cost.
+                if (item.baseUnitsAdded > 0) {
+                    val newCostPerBase = item.totalCost / item.baseUnitsAdded
+                    val updatedBuyingCost = when (costingMethod) {
+                        "LAST_PURCHASE_COST" -> newCostPerBase
+                        else -> { // WEIGHTED_AVERAGE (default)
+                            if (product.currentStockBase <= 0.0) {
+                                newCostPerBase
+                            } else {
+                                ((product.currentStockBase * product.buyingCost) + item.totalCost) / newStock
+                            }
+                        }
+                    }
+                    if (updatedBuyingCost != product.buyingCost) {
+                        db.productDao().updateProduct(product.copy(buyingCost = updatedBuyingCost))
+                    }
+                }
 
                 // Update intact count if receiving a packaging profile with intact tracking or canOpen
                 val conversions = db.productDao().getUnitConversionsSync(product.id)

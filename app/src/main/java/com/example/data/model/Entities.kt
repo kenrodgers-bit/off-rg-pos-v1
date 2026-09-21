@@ -22,6 +22,9 @@ data class Business(
     val taxRatePercent: Double = 0.0,
     val receiptHeader: String = "Thank you for shopping with us!",
     val receiptFooter: String = "Goods once sold are only returnable with receipt within 7 days.",
+    // Costing method used to recalculate Product.buyingCost when new stock is received.
+    // One of: "WEIGHTED_AVERAGE", "LAST_PURCHASE_COST"
+    val costingMethod: String = "WEIGHTED_AVERAGE",
     val ownerPin: String,
     val isConfigured: Boolean = false,
     val createdAtEpoch: Long = System.currentTimeMillis()

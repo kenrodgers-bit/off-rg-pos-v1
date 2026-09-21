@@ -17,6 +17,19 @@ data class FilterCriteria(
     val segmentFilter: String
 )
 
+// One row per product + selling form (packaging unit) sold, for the "Sales by Selling
+// Form" report section. Mirrors ui.screens.SellingFormBreakdownRow but kept dependency-free
+// here so ReportExporter doesn't need to import the UI layer.
+data class SellingFormExportRow(
+    val productName: String,
+    val unitName: String,
+    val quantitySold: Double,
+    val baseUnitsSold: Double,
+    val revenue: Double,
+    val cost: Double,
+    val profit: Double
+)
+
 data class ReportSummaryData(
     val grossSales: Double,
     val discounts: Double,
@@ -44,7 +57,8 @@ object ReportExporter {
         filters: FilterCriteria,
         summary: ReportSummaryData,
         sales: List<Sale>,
-        payments: List<Payment>
+        payments: List<Payment>,
+        sellingFormRows: List<SellingFormExportRow> = emptyList()
     ): File {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val filename = "RG_POS_Report_${timestamp}.csv"
@@ -91,6 +105,20 @@ object ReportExporter {
             sb.append("${s.discount},")
             sb.append("${s.total},")
             sb.append("\"${s.status}\"\n")
+        }
+
+        if (sellingFormRows.isNotEmpty()) {
+            sb.append("\n--- SALES BY SELLING FORM ---\n")
+            sb.append("Product,Selling Form,Quantity Sold,Base Units Sold,Revenue (KSh),Cost (KSh),Profit (KSh)\n")
+            sellingFormRows.forEach { row ->
+                sb.append("\"${row.productName}\",")
+                sb.append("\"${row.unitName}\",")
+                sb.append("${row.quantitySold},")
+                sb.append("${row.baseUnitsSold},")
+                sb.append("${row.revenue},")
+                sb.append("${row.cost},")
+                sb.append("${row.profit}\n")
+            }
         }
 
         file.writeText(sb.toString(), Charsets.UTF_8)

@@ -272,6 +272,9 @@ interface SaleDao {
     @Query("SELECT * FROM sale_items")
     suspend fun getAllSaleItemsList(): List<SaleItem>
 
+    @Query("SELECT * FROM sale_items")
+    fun getAllSaleItemsFlow(): Flow<List<SaleItem>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSaleItems(items: List<SaleItem>)
 

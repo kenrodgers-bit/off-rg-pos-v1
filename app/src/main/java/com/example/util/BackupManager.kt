@@ -96,6 +96,7 @@ class BackupManager(private val context: Context, private val db: AppDatabase) {
                         put("taxRatePercent", it.taxRatePercent)
                         put("receiptHeader", it.receiptHeader)
                         put("receiptFooter", it.receiptFooter)
+                        put("costingMethod", it.costingMethod)
                         put("ownerPin", it.ownerPin)
                         put("isConfigured", it.isConfigured)
                         put("createdAtEpoch", it.createdAtEpoch)
@@ -595,6 +596,7 @@ class BackupManager(private val context: Context, private val db: AppDatabase) {
                         taxRatePercent = it.optDouble("taxRatePercent", 0.0),
                         receiptHeader = it.optString("receiptHeader", "Thank you for shopping with us!"),
                         receiptFooter = it.optString("receiptFooter", "Goods once sold are only returnable with receipt within 7 days."),
+                        costingMethod = it.optString("costingMethod", "WEIGHTED_AVERAGE"),
                         ownerPin = it.optString("ownerPin", "1234"),
                         isConfigured = it.optBoolean("isConfigured", true),
                         createdAtEpoch = it.optLong("createdAtEpoch", System.currentTimeMillis())
@@ -857,6 +859,7 @@ class BackupManager(private val context: Context, private val db: AppDatabase) {
                     taxRatePercent = it.optDouble("taxRatePercent", 0.0),
                     receiptHeader = it.optString("receiptHeader", "Thank you for shopping with us!"),
                     receiptFooter = it.optString("receiptFooter", "Goods once sold are only returnable with receipt within 7 days."),
+                    costingMethod = it.optString("costingMethod", "WEIGHTED_AVERAGE"),
                     ownerPin = it.optString("ownerPin", "1234"),
                     isConfigured = it.optBoolean("isConfigured", true),
                     createdAtEpoch = it.optLong("createdAtEpoch", System.currentTimeMillis())

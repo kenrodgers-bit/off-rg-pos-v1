@@ -100,6 +100,9 @@ class PosViewModel(application: Application) : AndroidViewModel(application) {
     val allCompletedSales: StateFlow<List<Sale>> = repository.allCompletedSales
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allSaleItems: StateFlow<List<SaleItem>> = repository.allSaleItems
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val allStaff: StateFlow<List<User>> = repository.allUsers
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

@@ -40,6 +40,7 @@ fun SettingsScreen(
     var mpesaTill by remember(business) { mutableStateOf(business?.mpesaTill ?: "") }
     var kraPin by remember(business) { mutableStateOf(business?.kraPin ?: "") }
     var receiptFooter by remember(business) { mutableStateOf(business?.receiptFooter ?: "Asante kwa kununua nasi! Karibu tena.") }
+    var costingMethod by remember(business) { mutableStateOf(business?.costingMethod ?: "WEIGHTED_AVERAGE") }
     var isSaving by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -170,6 +171,39 @@ fun SettingsScreen(
                 singleLine = true
             )
 
+            Text(
+                text = "Inventory Costing",
+                color = TextMuted,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = "How the cost per unit is recalculated when new stock is received. Used for profit and margin reports.",
+                color = TextMuted,
+                fontSize = 11.sp
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(
+                    "WEIGHTED_AVERAGE" to "Weighted Average",
+                    "LAST_PURCHASE_COST" to "Last Purchase Cost"
+                ).forEach { (value, label) ->
+                    FilterChip(
+                        selected = costingMethod == value,
+                        onClick = { costingMethod = value },
+                        label = { Text(label, fontSize = 12.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = RgAccent,
+                            selectedLabelColor = DarkBg
+                        ),
+                        modifier = Modifier.testTag("costing_method_${value}")
+                    )
+                }
+            }
+
             FuturisticButton(
                 text = if (isSaving) "Saving..." else "Save Changes",
                 icon = Icons.Default.Save,
@@ -184,7 +218,8 @@ fun SettingsScreen(
                                 address = address,
                                 mpesaTill = mpesaTill,
                                 kraPin = kraPin,
-                                receiptFooter = receiptFooter
+                                receiptFooter = receiptFooter,
+                                costingMethod = costingMethod
                             )
                             viewModel.repository.saveBusiness(updated)
                             isSaving = false
