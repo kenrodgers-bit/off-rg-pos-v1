@@ -378,6 +378,7 @@ fun ReportsScreen(
             .fillMaxSize()
             .background(DarkBg)
             .padding(16.dp)
+            .widthIn(max = 900.dp)
             .verticalScroll(rememberScrollState())
             .testTag("reports_screen"),
         verticalArrangement = Arrangement.spacedBy(14.dp)

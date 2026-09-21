@@ -91,6 +91,7 @@ fun InventoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("inventory_screen"),
             verticalArrangement = Arrangement.spacedBy(12.dp)

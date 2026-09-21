@@ -90,6 +90,7 @@ fun CustomerCreditScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("customer_credit_screen"),
             verticalArrangement = Arrangement.spacedBy(14.dp)

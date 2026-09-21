@@ -79,6 +79,7 @@ fun CashShiftScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
                 .testTag("cash_shift_screen"),

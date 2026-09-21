@@ -75,6 +75,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBg)
+            .widthIn(max = 900.dp)
             .padding(horizontal = 16.dp)
             .testTag("home_screen"),
         contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),

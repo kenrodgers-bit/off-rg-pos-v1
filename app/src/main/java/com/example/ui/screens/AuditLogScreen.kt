@@ -70,6 +70,7 @@ fun AuditLogScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("audit_log_screen"),
             verticalArrangement = Arrangement.spacedBy(12.dp)

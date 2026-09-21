@@ -88,6 +88,7 @@ fun StaffScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("staff_screen")
         ) {

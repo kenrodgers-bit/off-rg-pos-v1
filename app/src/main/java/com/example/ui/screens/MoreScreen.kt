@@ -58,6 +58,7 @@ fun MoreScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBg)
+            .widthIn(max = 900.dp)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .testTag("more_screen"),
         verticalArrangement = Arrangement.spacedBy(14.dp)

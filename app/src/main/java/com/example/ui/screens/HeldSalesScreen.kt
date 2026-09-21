@@ -69,6 +69,7 @@ fun HeldSalesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("held_sales_screen")
         ) {

@@ -92,6 +92,7 @@ fun ExpensesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .testTag("expenses_screen"),
             verticalArrangement = Arrangement.spacedBy(12.dp)

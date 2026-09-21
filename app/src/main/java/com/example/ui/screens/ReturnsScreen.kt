@@ -80,6 +80,7 @@ fun ReturnsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
                 .testTag("returns_screen"),

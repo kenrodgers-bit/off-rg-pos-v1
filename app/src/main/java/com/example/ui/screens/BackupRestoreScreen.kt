@@ -120,6 +120,7 @@ fun BackupRestoreScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .widthIn(max = 900.dp)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
                 .testTag("backup_restore_screen"),
