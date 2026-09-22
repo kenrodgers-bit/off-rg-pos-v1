@@ -470,6 +470,17 @@ class BackupManager(private val context: Context, private val db: AppDatabase) {
             val targetFile = File(backupsDir, filename)
             targetFile.writeText(envelope.toString(2), Charsets.UTF_8)
 
+            // Also drop a copy into the public Downloads/RG POS Backups folder (not the
+            // app-private safety-backup snapshots) so backups are visible in the device's
+            // file manager and can be picked up by any cloud-sync app the user has
+            // installed (Google Drive, Dropbox, OneDrive, FolderSync/Autosync, etc.) that
+            // they've pointed at that folder -- without RG POS needing its own API
+            // integration with each provider. Never let this secondary copy's failure
+            // affect the primary backup, which has already succeeded at this point.
+            if (!isSafetyBackup) {
+                copyBackupToPublicDownloads(targetFile)
+            }
+
             // Log backup event in audit log
             db.auditLogDao().insertLog(
                 AuditLog(
@@ -487,6 +498,53 @@ class BackupManager(private val context: Context, private val db: AppDatabase) {
             Result.success(targetFile)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Copies a backup file into the public Downloads/RG POS Backups folder so it's
+     * visible outside the app (file manager, and any cloud-sync app pointed at that
+     * folder). Uses MediaStore on Android 10+ (no permission needed, scoped-storage
+     * compliant); on older versions, writes directly to the public Downloads directory
+     * if WRITE_EXTERNAL_STORAGE has been granted, and silently skips if not -- this is a
+     * convenience copy, never a substitute for the app-private backup used for restore,
+     * so a failure here must never fail the backup as a whole.
+     */
+    private fun copyBackupToPublicDownloads(sourceFile: File) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                val values = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.Downloads.DISPLAY_NAME, sourceFile.name)
+                    put(android.provider.MediaStore.Downloads.MIME_TYPE, "application/octet-stream")
+                    put(android.provider.MediaStore.Downloads.RELATIVE_PATH, "Download/RG POS Backups")
+                }
+                val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                if (uri != null) {
+                    resolver.openOutputStream(uri)?.use { out ->
+                        sourceFile.inputStream().use { input -> input.copyTo(out) }
+                    }
+                }
+            } else {
+                val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (hasPermission) {
+                    @Suppress("DEPRECATION")
+                    val downloadsDir = File(
+                        android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                        "RG POS Backups"
+                    )
+                    if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                    sourceFile.copyTo(File(downloadsDir, sourceFile.name), overwrite = true)
+                }
+                // If permission isn't granted on a pre-Android-10 device, we skip silently --
+                // a background worker can't prompt for a runtime permission, and the primary
+                // app-private backup (used for restore) is unaffected either way.
+            }
+        } catch (e: Exception) {
+            // Never let the convenience copy break backup creation itself.
         }
     }
 

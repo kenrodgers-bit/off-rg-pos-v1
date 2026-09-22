@@ -514,15 +514,21 @@ fun BackupRestoreScreen(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Cloud Backup & Google Drive", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Cloud Backup", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text(
-                        text = "RG POS is 100% offline-first. Cloud sync uses Android's native secure Document & Cloud Storage provider to sync your encrypted .rgbackup files directly into Google Drive, OneDrive, or Dropbox without requiring permanent online connectivity.",
+                        text = "RG POS doesn't connect directly to a specific cloud account yet. " +
+                            "Tapping below opens Android's share sheet so you can send your latest " +
+                            "backup to whichever cloud app you have installed -- Google Drive, " +
+                            "Dropbox, OneDrive, email, etc. Automatic daily/weekly backups are also " +
+                            "copied into Downloads / RG POS Backups on this device, so a folder-sync " +
+                            "app pointed at that folder can pick new backups up on its own without " +
+                            "you having to do this manually each time.",
                         color = TextMuted,
                         fontSize = 12.sp
                     )
 
                     FuturisticButton(
-                        text = "Upload Latest Backup to Google Drive",
+                        text = "Send Latest Backup to a Cloud App",
                         icon = Icons.Default.CloudUpload,
                         onClick = {
                             val latest = backupList.firstOrNull()
@@ -558,6 +564,14 @@ fun BackupRestoreScreen(
             ) {
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Automatic Backup Configuration", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        "Every backup is also copied to Downloads / RG POS Backups on this " +
+                            "device. Point Google Drive, Dropbox, OneDrive or any folder-sync " +
+                            "app you use at that folder to get automatic cloud backup without " +
+                            "connecting an account in RG POS itself.",
+                        color = TextMuted,
+                        fontSize = 11.sp
+                    )
 
                     Text("Backup Frequency:", color = TextMuted, fontSize = 12.sp)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {

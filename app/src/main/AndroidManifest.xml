@@ -4,6 +4,12 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Only used on Android 9 (API 28) and below, to copy a backup file into the public
+         Downloads folder for visibility / third-party cloud-sync apps. Android 10+ uses
+         MediaStore instead, which needs no permission at all (scoped storage). -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <application
         android:allowBackup="true"
