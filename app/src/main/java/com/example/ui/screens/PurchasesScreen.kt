@@ -7,6 +7,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -107,12 +110,14 @@ fun PurchasesScreen(
                     onActionClick = { showNewPurchaseDialog = true }
                 )
             } else {
-                LazyColumn(
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 340.dp),
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
-                    items(purchases) { purchase ->
+                    gridItems(purchases) { purchase ->
                         Card(
                             colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
                             border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder),
