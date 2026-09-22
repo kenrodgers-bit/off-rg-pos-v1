@@ -80,6 +80,8 @@ fun BackupRestoreScreen(
 
     LaunchedEffect(Unit) {
         refreshBackups()
+        autoBackupFreq = viewModel.repository.getAutoBackupFrequency()
+        retentionCount = viewModel.repository.getAutoBackupRetentionCount()
     }
 
     Scaffold(
@@ -583,7 +585,16 @@ fun BackupRestoreScreen(
                         FuturisticButton(
                             text = "Save Settings",
                             onClick = {
-                                Toast.makeText(context, "Backup configuration saved ($autoBackupFreq, retain $retentionCount).", Toast.LENGTH_SHORT).show()
+                                coroutineScope.launch {
+                                    viewModel.repository.saveAutoBackupSettings(autoBackupFreq, retentionCount)
+                                    com.example.util.AutoBackupWorker.schedule(context, autoBackupFreq, retentionCount)
+                                    val message = if (autoBackupFreq == "OFF") {
+                                        "Automatic backup turned off."
+                                    } else {
+                                        "Automatic backup scheduled: $autoBackupFreq, keeping last $retentionCount copies."
+                                    }
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
                                 showSettingsDialog = false
                             }
                         )

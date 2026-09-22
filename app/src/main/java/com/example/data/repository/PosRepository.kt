@@ -142,6 +142,24 @@ class PosRepository(val db: AppDatabase) {
         db.productDao().deleteUnitConversion(id)
     }
 
+    // Auto-backup scheduling preferences (persisted so they survive app restarts;
+    // the WorkManager schedule itself also persists independently, but this lets the
+    // Backup & Restore screen show the user's last-saved choice on reopen).
+    suspend fun getAutoBackupFrequency(): String =
+        db.appSettingDao().getSetting("auto_backup_frequency") ?: "OFF"
+
+    suspend fun getAutoBackupRetentionCount(): Int =
+        db.appSettingDao().getSetting("auto_backup_retention_count")?.toIntOrNull() ?: 5
+
+    suspend fun saveAutoBackupSettings(frequency: String, retentionCount: Int) {
+        db.appSettingDao().insertSettings(
+            listOf(
+                AppSetting(key = "auto_backup_frequency", value = frequency),
+                AppSetting(key = "auto_backup_retention_count", value = retentionCount.toString())
+            )
+        )
+    }
+
     // Critical Package Opening / Break-Bulk Engine
     suspend fun openPackage(
         productId: Long,

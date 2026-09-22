@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.database.AppDatabase
 import com.example.data.model.*
 import com.example.data.repository.PosRepository
+import com.example.util.AutoBackupWorker
 import com.example.util.NetworkMonitor
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -148,6 +149,15 @@ class PosViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             repository.seedStarterProductsIfEmpty()
+        }
+        // Re-apply the persisted auto-backup schedule on every app start. WorkManager's own
+        // periodic-work registration already survives process/device restarts on its own,
+        // but doing this here is a cheap safety net in case that registration was ever lost
+        // (e.g. app data partially cleared) without the user having to reopen Settings.
+        viewModelScope.launch {
+            val frequency = repository.getAutoBackupFrequency()
+            val retentionCount = repository.getAutoBackupRetentionCount()
+            AutoBackupWorker.schedule(application, frequency, retentionCount)
         }
     }
 
