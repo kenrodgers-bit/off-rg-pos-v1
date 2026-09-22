@@ -292,7 +292,17 @@ private fun MainAppNavHost(
                     },
                     onNavigateToStockTake = {
                         navController.navigate(Screen.StockTake.route)
+                    },
+                    onNavigateToImport = {
+                        navController.navigate(Screen.InventoryImport.route)
                     }
+                )
+            }
+
+            composable(Screen.InventoryImport.route) {
+                InventoryImportScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 

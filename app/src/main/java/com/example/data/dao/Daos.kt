@@ -431,3 +431,18 @@ interface AppSettingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSettings(settings: List<AppSetting>)
 }
+
+@Dao
+interface ImportBatchDao {
+    @Query("SELECT * FROM import_batches ORDER BY dateEpoch DESC")
+    fun getAllBatchesFlow(): Flow<List<ImportBatch>>
+
+    @Query("SELECT * FROM import_batches ORDER BY dateEpoch DESC")
+    suspend fun getAllBatchesList(): List<ImportBatch>
+
+    @Query("SELECT * FROM import_batches WHERE id = :id LIMIT 1")
+    suspend fun getBatchById(id: Long): ImportBatch?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBatch(batch: ImportBatch): Long
+}

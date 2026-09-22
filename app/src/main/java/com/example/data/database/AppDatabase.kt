@@ -30,7 +30,8 @@ import com.example.data.model.*
         ReturnOrder::class,
         ReturnItem::class,
         AuditLog::class,
-        AppSetting::class
+        AppSetting::class,
+        ImportBatch::class
     ],
     version = 1,
     exportSchema = false
@@ -52,6 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun returnDao(): ReturnDao
     abstract fun auditLogDao(): AuditLogDao
     abstract fun appSettingDao(): AppSettingDao
+    abstract fun importBatchDao(): ImportBatchDao
 
     companion object {
         @Volatile

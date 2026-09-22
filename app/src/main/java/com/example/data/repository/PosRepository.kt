@@ -160,6 +160,16 @@ class PosRepository(val db: AppDatabase) {
         )
     }
 
+    // Spreadsheet import/export (see util.InventoryImportExport for the actual engine)
+    suspend fun getAllProductsSnapshot(): List<Product> = db.productDao().getAllProductsList()
+
+    suspend fun getAllUnitConversionsSnapshot(): List<UnitConversion> = db.productDao().getAllUnitConversions()
+
+    val importHistory: Flow<List<ImportBatch>> = db.importBatchDao().getAllBatchesFlow()
+
+    suspend fun applyInventoryImport(preview: com.example.util.InventoryImportExport.Preview, userName: String): ImportBatch =
+        com.example.util.InventoryImportExport.applyImport(db, preview, userName)
+
     // Critical Package Opening / Break-Bulk Engine
     suspend fun openPackage(
         productId: Long,

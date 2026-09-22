@@ -45,7 +45,8 @@ import kotlinx.coroutines.launch
 fun InventoryScreen(
     viewModel: PosViewModel,
     onNavigateToAddProduct: (Long) -> Unit,
-    onNavigateToStockTake: () -> Unit
+    onNavigateToStockTake: () -> Unit,
+    onNavigateToImport: () -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -131,6 +132,20 @@ fun InventoryScreen(
                     Icon(Icons.Default.FactCheck, contentDescription = null, tint = RgAccent, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Stock Take", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onNavigateToImport,
+                    modifier = Modifier.testTag("import_export_button")
+                ) {
+                    Icon(Icons.Default.ImportExport, contentDescription = null, tint = RgAccent, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Import / Export Spreadsheet", fontSize = 12.sp, color = RgAccent, fontWeight = FontWeight.Bold)
                 }
             }
 

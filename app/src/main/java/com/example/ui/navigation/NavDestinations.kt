@@ -47,6 +47,7 @@ sealed class Screen(val route: String) {
     object AuditLog : Screen("audit_log")
     object Settings : Screen("settings")
     object BackupRestore : Screen("backup_restore")
+    object InventoryImport : Screen("inventory_import")
 }
 
 enum class MainTab(val title: String, val icon: ImageVector, val route: String, val tag: String) {

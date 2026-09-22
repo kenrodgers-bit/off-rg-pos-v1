@@ -330,3 +330,24 @@ data class AppSetting(
     @PrimaryKey val key: String,
     val value: String
 )
+
+@Entity(tableName = "import_batches")
+data class ImportBatch(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val batchCode: String,
+    val filename: String,
+    val importedByUserName: String = "Staff",
+    val dateEpoch: Long = System.currentTimeMillis(),
+    val mode: String = "FULL_IMPORT", // FULL_IMPORT, UPDATE_EXISTING, ADD_NEW, STOCK_ADJUSTMENT, PRICE_UPDATE
+    val totalRows: Int = 0,
+    val productsCreated: Int = 0,
+    val productsUpdated: Int = 0,
+    val packagingChanges: Int = 0,
+    val stockAdded: Double = 0.0,
+    val stockRemoved: Double = 0.0,
+    val pricesUpdated: Int = 0,
+    val deactivations: Int = 0,
+    val warningsCount: Int = 0,
+    val errorsCount: Int = 0,
+    val status: String = "COMPLETED" // COMPLETED, FAILED
+)
