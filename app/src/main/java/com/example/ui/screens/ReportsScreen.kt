@@ -413,6 +413,17 @@ fun ReportsScreen(
                             paymentFilter = selectedPaymentMethod,
                             segmentFilter = selectedCustomerSegment
                         )
+                        val exportRows = sellingFormBreakdown.map { row ->
+                            com.example.util.SellingFormExportRow(
+                                productName = row.productName,
+                                unitName = row.unitName,
+                                quantitySold = row.quantitySold,
+                                baseUnitsSold = row.baseUnitsSold,
+                                revenue = row.revenue,
+                                cost = row.cost,
+                                profit = row.profit
+                            )
+                        }
                         val file = ReportExporter.exportToCsv(
                             context = context,
                             businessName = business?.name ?: "RG POS",
@@ -421,17 +432,7 @@ fun ReportsScreen(
                             summary = paymentBreakdown,
                             sales = finalFilteredSales,
                             payments = allPayments,
-                            sellingFormRows = sellingFormBreakdown.map { row ->
-                                com.example.util.SellingFormExportRow(
-                                    productName = row.productName,
-                                    unitName = row.unitName,
-                                    quantitySold = row.quantitySold,
-                                    baseUnitsSold = row.baseUnitsSold,
-                                    revenue = row.revenue,
-                                    cost = row.cost,
-                                    profit = row.profit
-                                )
-                            }
+                            sellingFormRows = exportRows
                         )
                         ReportExporter.shareReport(context, file)
                     },
@@ -444,6 +445,50 @@ fun ReportsScreen(
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = "Share Report",
+                        tint = RgAccent
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        val filters = FilterCriteria(
+                            dateLabel = rangeDisplayText,
+                            staffFilter = selectedStaff,
+                            paymentFilter = selectedPaymentMethod,
+                            segmentFilter = selectedCustomerSegment
+                        )
+                        val exportRows = sellingFormBreakdown.map { row ->
+                            com.example.util.SellingFormExportRow(
+                                productName = row.productName,
+                                unitName = row.unitName,
+                                quantitySold = row.quantitySold,
+                                baseUnitsSold = row.baseUnitsSold,
+                                revenue = row.revenue,
+                                cost = row.cost,
+                                profit = row.profit
+                            )
+                        }
+                        val file = ReportExporter.exportToPdf(
+                            context = context,
+                            businessName = business?.name ?: "RG POS",
+                            reportTitle = "Business Performance Report",
+                            filters = filters,
+                            summary = paymentBreakdown,
+                            sales = finalFilteredSales,
+                            payments = allPayments,
+                            sellingFormRows = exportRows
+                        )
+                        ReportExporter.shareReport(context, file, mimeType = "application/pdf")
+                    },
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(DarkSurfaceCard)
+                        .border(1.dp, DarkBorder, CircleShape)
+                        .testTag("export_pdf_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PictureAsPdf,
+                        contentDescription = "Export PDF Report",
                         tint = RgAccent
                     )
                 }
