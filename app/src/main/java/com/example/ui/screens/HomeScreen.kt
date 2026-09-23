@@ -71,71 +71,109 @@ fun HomeScreen(
         }
     }
 
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBg)
-            .widthIn(max = 900.dp)
-            .padding(horizontal = 16.dp)
-            .testTag("home_screen"),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .background(DarkBg),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Header
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "$greeting,",
-                        color = TextMuted,
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        text = business?.name ?: "RG POS",
-                        color = TextWhite,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = PosDesignTokens.ScreenContentMaxWidth)
+                .padding(horizontal = 16.dp)
+                .testTag("home_screen"),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Header
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "$greeting,",
+                            color = TextMuted,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = business?.name ?: "RG POS",
+                            color = TextWhite,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    OfflineIndicator(isOnline = isOnline)
                 }
-                OfflineIndicator(isOnline = isOnline)
             }
-        }
 
-        // Primary Metrics Row
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                MetricCard(
-                    title = "Today's Sales",
-                    value = CurrencyFormatter.format(todayStats.first),
-                    accentColor = RgAccent,
-                    icon = Icons.Default.TrendingUp,
-                    modifier = Modifier.weight(1f).testTag("today_sales_card")
-                )
-                MetricCard(
-                    title = "Today's Profit",
-                    value = CurrencyFormatter.format(todayStats.second),
-                    accentColor = SuccessGreen,
-                    icon = Icons.Default.AttachMoney,
-                    modifier = Modifier.weight(1f).testTag("today_profit_card")
-                )
-                MetricCard(
-                    title = "Transactions",
-                    value = "${todayStats.third}",
-                    accentColor = CreditBlue,
-                    icon = Icons.Default.ReceiptLong,
-                    modifier = Modifier.weight(0.85f).testTag("transactions_count_card")
-                )
+            // Primary Metrics Section (Adaptive)
+            item {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    if (maxWidth < 360.dp) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                MetricCard(
+                                    title = "Today's Sales",
+                                    value = CurrencyFormatter.format(todayStats.first),
+                                    accentColor = RgAccent,
+                                    icon = Icons.Default.TrendingUp,
+                                    modifier = Modifier.weight(1f).testTag("today_sales_card")
+                                )
+                                MetricCard(
+                                    title = "Today's Profit",
+                                    value = CurrencyFormatter.format(todayStats.second),
+                                    accentColor = SuccessGreen,
+                                    icon = Icons.Default.AttachMoney,
+                                    modifier = Modifier.weight(1f).testTag("today_profit_card")
+                                )
+                            }
+                            MetricCard(
+                                title = "Transactions",
+                                value = "${todayStats.third}",
+                                accentColor = CreditBlue,
+                                icon = Icons.Default.ReceiptLong,
+                                modifier = Modifier.fillMaxWidth().testTag("transactions_count_card")
+                            )
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            MetricCard(
+                                title = "Today's Sales",
+                                value = CurrencyFormatter.format(todayStats.first),
+                                accentColor = RgAccent,
+                                icon = Icons.Default.TrendingUp,
+                                modifier = Modifier.weight(1f).testTag("today_sales_card")
+                            )
+                            MetricCard(
+                                title = "Today's Profit",
+                                value = CurrencyFormatter.format(todayStats.second),
+                                accentColor = SuccessGreen,
+                                icon = Icons.Default.AttachMoney,
+                                modifier = Modifier.weight(1f).testTag("today_profit_card")
+                            )
+                            MetricCard(
+                                title = "Transactions",
+                                value = "${todayStats.third}",
+                                accentColor = CreditBlue,
+                                icon = Icons.Default.ReceiptLong,
+                                modifier = Modifier.weight(0.85f).testTag("transactions_count_card")
+                            )
+                        }
+                    }
+                }
             }
-        }
 
         // Payment Summary
         item {
@@ -392,24 +430,25 @@ fun QuickActionButton(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
+        shape = RoundedCornerShape(PosDesignTokens.RadiusCard),
         border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder),
         modifier = modifier.clickable { onClick() }
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
                     .background(DarkSurfaceElevated),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                Icon(imageVector = icon, contentDescription = null, tint = accent, modifier = Modifier.size(16.dp))
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
                 color = TextWhite,

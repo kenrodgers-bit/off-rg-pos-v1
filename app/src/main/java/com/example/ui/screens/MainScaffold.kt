@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -17,6 +18,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.ui.navigation.FloatingPillNavBar
 import com.example.ui.navigation.MainTab
 import com.example.ui.navigation.Screen
 import com.example.ui.theme.*
@@ -33,192 +35,61 @@ fun MainScaffold(
 
     val cartItemCount by viewModel.cartItemCount.collectAsStateWithLifecycle()
 
-    val tabRoutes = remember {
-        listOf(
-            Screen.Home.route,
-            Screen.Pos.route,
-            Screen.Inventory.route,
+    // Map current route to active primary tab (or secondary screens under More)
+    val activeTab = remember(currentRoute) {
+        when (currentRoute) {
+            Screen.Home.route -> MainTab.HOME
+            Screen.Pos.route -> MainTab.POS
+            Screen.Inventory.route -> MainTab.INVENTORY
+            Screen.More.route,
             Screen.Reports.route,
-            Screen.More.route
-        )
+            Screen.BackupRestore.route,
+            Screen.Purchases.route,
+            Screen.Customers.route,
+            Screen.CustomerCredit.route,
+            Screen.Suppliers.route,
+            Screen.Expenses.route,
+            Screen.CashShift.route,
+            Screen.MpesaRecon.route,
+            Screen.Returns.route,
+            Screen.Staff.route,
+            Screen.AuditLog.route,
+            Screen.Settings.route,
+            Screen.StockTake.route -> MainTab.MORE
+            else -> null
+        }
     }
-    val isBottomBarVisible = currentRoute in tabRoutes
 
-    BoxWithConstraints(
+    val isPillNavVisible = activeTab != null
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(DarkBg)
     ) {
-        val isTablet = maxWidth >= 720.dp
+        // Main Screen Content
+        Box(modifier = Modifier.fillMaxSize()) {
+            MainAppNavHost(navController, viewModel, onLogout)
+        }
 
-        if (isTablet) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                if (isBottomBarVisible) {
-                    NavigationRail(
-                        containerColor = DarkSurfaceCard,
-                        contentColor = TextWhite,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .border(1.dp, DarkBorder)
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        MainTab.values().forEach { tab ->
-                            val isSelected = currentRoute == tab.route
-                            NavigationRailItem(
-                                selected = isSelected,
-                                onClick = {
-                                    if (currentRoute != tab.route) {
-                                        navController.navigate(tab.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
-                                },
-                                icon = {
-                                    BadgedBox(
-                                        badge = {
-                                            if (tab == MainTab.POS && cartItemCount > 0) {
-                                                Badge(
-                                                    containerColor = RgAccent,
-                                                    contentColor = DarkBg
-                                                ) {
-                                                    Text(
-                                                        text = "$cartItemCount",
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 10.sp
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = tab.icon,
-                                            contentDescription = tab.title,
-                                            tint = if (isSelected) RgAccent else TextMuted
-                                        )
-                                    }
-                                },
-                                label = {
-                                    Text(
-                                        text = tab.title,
-                                        color = if (isSelected) RgAccent else TextMuted,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = 11.sp
-                                    )
-                                },
-                                colors = NavigationRailItemDefaults.colors(
-                                    selectedIconColor = RgAccent,
-                                    unselectedIconColor = TextMuted,
-                                    indicatorColor = RgAccent.copy(alpha = 0.12f)
-                                ),
-                                modifier = Modifier.testTag(tab.tag)
-                            )
-                        }
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
-                    MainAppNavHost(navController, viewModel, onLogout)
-                }
-            }
-        } else {
-            Scaffold(
-                containerColor = DarkBg,
-                bottomBar = {
-                    if (isBottomBarVisible) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .navigationBarsPadding()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Surface(
-                                color = DarkSurfaceCard,
-                                shape = RoundedCornerShape(20.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder),
-                                shadowElevation = 8.dp,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                NavigationBar(
-                                    containerColor = Color.Transparent,
-                                    tonalElevation = 0.dp,
-                                    modifier = Modifier.height(64.dp)
-                                ) {
-                                    MainTab.values().forEach { tab ->
-                                        val isSelected = currentRoute == tab.route
-                                        NavigationBarItem(
-                                            selected = isSelected,
-                                            onClick = {
-                                                if (currentRoute != tab.route) {
-                                                    navController.navigate(tab.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                            },
-                                            icon = {
-                                                BadgedBox(
-                                                    badge = {
-                                                        if (tab == MainTab.POS && cartItemCount > 0) {
-                                                            Badge(
-                                                                containerColor = RgAccent,
-                                                                contentColor = DarkBg
-                                                            ) {
-                                                                Text(
-                                                                    text = "$cartItemCount",
-                                                                    fontWeight = FontWeight.Bold,
-                                                                    fontSize = 10.sp
-                                                                )
-                                                            }
-                                                        }
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        imageVector = tab.icon,
-                                                        contentDescription = tab.title,
-                                                        tint = if (isSelected) RgAccent else TextMuted
-                                                    )
-                                                }
-                                            },
-                                            label = {
-                                                Text(
-                                                    text = tab.title,
-                                                    color = if (isSelected) RgAccent else TextMuted,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                                    fontSize = 11.sp
-                                                )
-                                            },
-                                            colors = NavigationBarItemDefaults.colors(
-                                                selectedIconColor = RgAccent,
-                                                unselectedIconColor = TextMuted,
-                                                indicatorColor = RgAccent.copy(alpha = 0.12f)
-                                            ),
-                                            modifier = Modifier.testTag(tab.tag)
-                                        )
-                                    }
-                                }
+        // Floating Pill Navigation Bar (floats consistently above bottom edge on all devices)
+        if (isPillNavVisible) {
+            FloatingPillNavBar(
+                activeTab = activeTab,
+                cartBadgeCount = cartItemCount,
+                onTabSelected = { tab ->
+                    if (currentRoute != tab.route) {
+                        navController.navigate(tab.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
+                            launchSingleTop = true
+                            restoreState = true
                         }
                     }
-                }
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    MainAppNavHost(navController, viewModel, onLogout)
-                }
-            }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
@@ -313,11 +184,13 @@ private fun MainAppNavHost(
                 )
             }
 
-            // Tab 5: More (Operations Hub)
+            // More (Operations Hub)
             composable(Screen.More.route) {
                 MoreScreen(
+                    viewModel = viewModel,
                     onNavigate = { route ->
                         when (route) {
+                            "reports" -> navController.navigate(Screen.Reports.route)
                             "customers" -> navController.navigate(Screen.Customers.route)
                             "purchases" -> navController.navigate(Screen.Purchases.route)
                             "suppliers" -> navController.navigate(Screen.Suppliers.route)
@@ -329,6 +202,7 @@ private fun MainAppNavHost(
                             "audit_log" -> navController.navigate(Screen.AuditLog.route)
                             "settings" -> navController.navigate(Screen.Settings.route)
                             "backup" -> navController.navigate(Screen.BackupRestore.route)
+                            "stock_take" -> navController.navigate(Screen.StockTake.route)
                             else -> {}
                         }
                     },

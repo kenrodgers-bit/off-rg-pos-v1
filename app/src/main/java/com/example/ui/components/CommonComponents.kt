@@ -83,6 +83,12 @@ fun OfflineIndicator(isOnline: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
+enum class PosButtonSize {
+    PRIMARY,
+    SECONDARY,
+    COMPACT
+}
+
 @Composable
 fun MetricCard(
     title: String,
@@ -95,15 +101,15 @@ fun MetricCard(
 ) {
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(PosDesignTokens.RadiusCard))
             .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp)),
+            .border(1.dp, DarkBorder, RoundedCornerShape(PosDesignTokens.RadiusCard)),
         color = DarkSurfaceCard,
-        tonalElevation = 2.dp
+        tonalElevation = PosDesignTokens.ElevationCard
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -113,33 +119,34 @@ fun MetricCard(
                 Text(
                     text = title,
                     color = TextMuted,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = accentColor,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(PosDesignTokens.IconSizeXs)
                     )
                 }
             }
             Text(
                 text = value,
                 color = TextWhite,
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            if (subtitle != null) {
+            if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
                     color = TextSubtle,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -160,13 +167,13 @@ fun EmptyStateView(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(28.dp),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(56.dp)
                 .clip(CircleShape)
                 .background(DarkSurfaceElevated)
                 .border(1.dp, DarkBorder, CircleShape),
@@ -176,35 +183,33 @@ fun EmptyStateView(
                 imageVector = icon,
                 contentDescription = null,
                 tint = RgAccent,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(28.dp)
             )
         }
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = title,
             color = TextWhite,
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = description,
             color = TextMuted,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             textAlign = TextAlign.Center,
-            lineHeight = 18.sp
+            lineHeight = 16.sp
         )
         if (actionButtonText != null && onActionClick != null) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
+            Spacer(modifier = Modifier.height(14.dp))
+            FuturisticButton(
+                text = actionButtonText,
                 onClick = onActionClick,
-                colors = ButtonDefaults.buttonColors(containerColor = RgAccent, contentColor = DarkBg),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.testTag("empty_state_action_button")
-            ) {
-                Text(text = actionButtonText, fontWeight = FontWeight.Bold)
-            }
+                size = PosButtonSize.SECONDARY,
+                testTag = "empty_state_action_button"
+            )
         }
     }
 }
@@ -217,15 +222,39 @@ fun FuturisticButton(
     enabled: Boolean = true,
     isSecondary: Boolean = false,
     icon: ImageVector? = null,
+    size: PosButtonSize = PosButtonSize.PRIMARY,
     testTag: String = "futuristic_button"
 ) {
+    val height = when (size) {
+        PosButtonSize.PRIMARY -> PosDesignTokens.ButtonHeightPrimary
+        PosButtonSize.SECONDARY -> PosDesignTokens.ButtonHeightSecondary
+        PosButtonSize.COMPACT -> PosDesignTokens.ButtonHeightCompact
+    }
+    val fontSize = when (size) {
+        PosButtonSize.PRIMARY -> 13.sp
+        PosButtonSize.SECONDARY -> 12.sp
+        PosButtonSize.COMPACT -> 11.sp
+    }
+    val iconSize = when (size) {
+        PosButtonSize.PRIMARY -> PosDesignTokens.IconSizeMd
+        PosButtonSize.SECONDARY -> PosDesignTokens.IconSizeSm
+        PosButtonSize.COMPACT -> PosDesignTokens.IconSizeXs
+    }
+    val hPadding = when (size) {
+        PosButtonSize.PRIMARY -> PosDesignTokens.ButtonPaddingHorizontal
+        PosButtonSize.SECONDARY -> PosDesignTokens.ButtonPaddingSecondaryHorizontal
+        PosButtonSize.COMPACT -> PosDesignTokens.ButtonPaddingCompactHorizontal
+    }
+
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
-            .height(50.dp)
+            .defaultMinSize(minWidth = 48.dp, minHeight = height)
+            .heightIn(min = height, max = height + 4.dp)
             .testTag(testTag),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(PosDesignTokens.RadiusButton),
+        contentPadding = PaddingValues(horizontal = hPadding, vertical = 0.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSecondary) DarkSurfaceElevated else RgAccent,
             contentColor = if (isSecondary) TextWhite else DarkBg,
@@ -236,18 +265,63 @@ fun FuturisticButton(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.wrapContentSize()
         ) {
             if (icon != null) {
-                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(iconSize)
+                )
             }
             Text(
                 text = text,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = fontSize,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
+}
+
+@Composable
+fun CompactButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isSecondary: Boolean = false,
+    icon: ImageVector? = null,
+    testTag: String = "compact_button"
+) {
+    FuturisticButton(
+        text = text,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        isSecondary = isSecondary,
+        icon = icon,
+        size = PosButtonSize.COMPACT,
+        testTag = testTag
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AdaptiveButtonRow(
+    modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(8.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(8.dp),
+    content: @Composable FlowRowScope.() -> Unit
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = horizontalArrangement,
+        verticalArrangement = verticalArrangement,
+        content = content
+    )
 }
 
 @Composable
@@ -265,7 +339,7 @@ fun NumericPinKeypad(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         for (row in digits) {
@@ -275,12 +349,12 @@ fun NumericPinKeypad(
             ) {
                 for (digit in row) {
                     if (digit.isEmpty()) {
-                        Spacer(modifier = Modifier.size(64.dp))
+                        Spacer(modifier = Modifier.size(54.dp))
                     } else if (digit == "DEL") {
                         IconButton(
                             onClick = onDeleteClick,
                             modifier = Modifier
-                                .size(64.dp)
+                                .size(54.dp)
                                 .clip(CircleShape)
                                 .background(DarkSurfaceCard)
                                 .border(1.dp, DarkBorder, CircleShape)
@@ -289,13 +363,14 @@ fun NumericPinKeypad(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Delete",
-                                tint = TextMuted
+                                tint = TextMuted,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     } else {
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
+                                .size(54.dp)
                                 .clip(CircleShape)
                                 .background(DarkSurfaceCard)
                                 .border(1.dp, DarkBorder, CircleShape)
@@ -306,7 +381,7 @@ fun NumericPinKeypad(
                             Text(
                                 text = digit,
                                 color = TextWhite,
-                                fontSize = 22.sp,
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }

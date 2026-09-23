@@ -10,8 +10,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -31,10 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.Product
 import com.example.data.model.StockMovement
 import com.example.data.model.UnitConversion
-import com.example.ui.components.EmptyStateView
-import com.example.ui.components.FuturisticButton
-import com.example.ui.components.MetricCard
-import com.example.ui.components.StatusBadge
+import com.example.ui.components.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.PosViewModel
 import com.example.util.CurrencyFormatter
@@ -468,19 +467,33 @@ fun ProductDetailDialog(
         conversions.filter { it.canOpen && it.intactCount > 0 }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(4.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
-            border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
+            val isWide = maxWidth >= 600.dp
+            val maxDialogWidth = if (isWide) 520.dp else 440.dp
+
+            Card(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .widthIn(max = maxDialogWidth)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
             ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -714,12 +727,13 @@ fun ProductDetailDialog(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                FuturisticButton(
-                    text = "Edit Full Product Details",
-                    icon = Icons.Default.Edit,
-                    onClick = onEdit,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    DialogActionButton(
+                        text = "Edit Full Product Details",
+                        icon = Icons.Default.Edit,
+                        onClick = onEdit,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -731,14 +745,14 @@ fun ProductDetailDialog(
             profile = selectedProfileToOpen!!,
             onConfirm = { countToOpen ->
                 coroutineScope.launch {
-                    val staffName = currentUser?.fullName ?: "Staff"
-                    val success = viewModel.repository.openPackage(
+                    val staffName = currentUser.ifBlank { "Staff" }
+                    val result = viewModel.repository.openPackage(
                         productId = product.id,
-                        packagingProfileId = selectedProfileToOpen!!.id,
-                        packagesToOpen = countToOpen,
+                        profileId = selectedProfileToOpen!!.id,
+                        countToOpen = countToOpen,
                         staffName = staffName
                     )
-                    if (success) {
+                    if (result.isSuccess) {
                         Toast.makeText(
                             context,
                             "Successfully opened $countToOpen × ${selectedProfileToOpen!!.unitName}",
@@ -746,7 +760,11 @@ fun ProductDetailDialog(
                         ).show()
                         reloadConversions()
                     } else {
-                        Toast.makeText(context, "Cannot open more than intact packages available", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            result.exceptionOrNull()?.message ?: "Cannot open packages",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     showOpenPackageDialog = false
                     selectedProfileToOpen = null
@@ -794,10 +812,10 @@ fun OpenPackageBreakBulkDialog(
     val maxAvailable = profile.intactCount
     val looseUnitsAdded = countToOpen * profile.conversionFactor
 
-    Dialog(onDismissRequest = onDismiss) {
+    ResponsiveDialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(PosDesignTokens.RadiusCard),
             colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
             border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
         ) {
@@ -922,10 +940,10 @@ fun PackagingProfileEditorDialog(
     var canOpen by remember { mutableStateOf(existing?.canOpen ?: true) }
     var intactCountText by remember { mutableStateOf(existing?.intactCount?.toString() ?: "0") }
 
-    Dialog(onDismissRequest = onDismiss) {
+    ResponsiveDialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(PosDesignTokens.RadiusCard),
             colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
             border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
         ) {

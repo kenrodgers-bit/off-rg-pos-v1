@@ -914,8 +914,8 @@ fun PackagingProfileDialog(
                                 purchaseCost = purchaseCostText.toDoubleOrNull(),
                                 canOpen = canOpen,
                                 intactCount = intactCountText.toIntOrNull() ?: 0,
-                                parentUnitName = if (conversionMode == 1) selectedParentProfile?.unitName else null,
-                                parentUnitMultiplier = if (conversionMode == 1) parentMultiplierText.toDoubleOrNull() else null
+                                parentUnitName = if (conversionMode == 1) selectedParentProfile?.unitName ?: "" else "",
+                                parentUnitMultiplier = if (conversionMode == 1) parentMultiplierText.toDoubleOrNull() ?: 1.0 else 1.0
                             )
                             onSave(profile)
                         },

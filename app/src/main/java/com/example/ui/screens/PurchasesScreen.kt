@@ -29,8 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.*
-import com.example.ui.components.EmptyStateView
-import com.example.ui.components.FuturisticButton
+import com.example.ui.components.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.PosViewModel
 import com.example.util.CurrencyFormatter
@@ -96,11 +95,16 @@ fun PurchasesScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .widthIn(max = 900.dp)
-                .padding(horizontal = 16.dp)
-                .testTag("purchases_screen")
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = PosDesignTokens.ScreenContentMaxWidth)
+                    .padding(horizontal = 16.dp)
+                    .testTag("purchases_screen")
+            ) {
             if (purchases.isEmpty()) {
                 EmptyStateView(
                     icon = Icons.Default.LocalShipping,
@@ -166,6 +170,7 @@ fun PurchasesScreen(
                     }
                 }
             }
+            }
         }
 
         // New Purchase Modal Dialog (Part 22)
@@ -200,9 +205,12 @@ fun NewPurchaseDialog(
     var unitPriceText by remember { mutableStateOf("") }
     var unitName by remember { mutableStateOf("Carton") }
     var factorText by remember { mutableStateOf("12") }
+    var productPackagingProfiles by remember { mutableStateOf<List<UnitConversion>>(emptyList()) }
 
     LaunchedEffect(selectedProduct) {
         if (selectedProduct != null) {
+            val profiles = viewModel.repository.getUnitConversionsSync(selectedProduct!!.id)
+            productPackagingProfiles = profiles
             unitName = selectedProduct!!.baseUnit
             factorText = "1"
             unitPriceText = selectedProduct!!.buyingCost.toString()
@@ -215,17 +223,31 @@ fun NewPurchaseDialog(
     val totalCost = quantity * unitPrice
     val baseUnitsToAdd = quantity * factor
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
-            border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            val isWide = maxWidth >= 600.dp
+            val maxDialogWidth = if (isWide) 520.dp else 440.dp
+
+            Card(
+                modifier = Modifier
+                    .widthIn(max = maxDialogWidth)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DarkBorder)
             ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -268,6 +290,44 @@ fun NewPurchaseDialog(
                         ) {
                             Text(p.name, color = TextWhite, fontSize = 12.sp)
                             Text("Stock: ${p.currentStockBase.toInt()} ${p.baseUnit}s", color = RgAccent, fontSize = 11.sp)
+                        }
+                    }
+                }
+
+                if (selectedProduct != null) {
+                    Text("Select Packaging Profile or enter custom:", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        contentPadding = PaddingValues(vertical = 2.dp)
+                    ) {
+                        // Base unit option
+                        item {
+                            val isBase = unitName.equals(selectedProduct!!.baseUnit, ignoreCase = true)
+                            CategoryCard(
+                                title = "1 ${selectedProduct!!.baseUnit}",
+                                isSelected = isBase,
+                                onClick = {
+                                    unitName = selectedProduct!!.baseUnit
+                                    factorText = "1"
+                                    unitPriceText = selectedProduct!!.buyingCost.toString()
+                                },
+                                testTag = "purchase_profile_base"
+                            )
+                        }
+
+                        // Profiles options
+                        items(productPackagingProfiles) { profile ->
+                            val isSelProfile = unitName.equals(profile.unitName, ignoreCase = true)
+                            CategoryCard(
+                                title = "📦 ${profile.unitName} (${profile.conversionFactor.toInt()} ${selectedProduct!!.baseUnit}s)",
+                                isSelected = isSelProfile,
+                                onClick = {
+                                    unitName = profile.unitName
+                                    factorText = profile.conversionFactor.toInt().toString()
+                                    unitPriceText = (profile.purchaseCost ?: (selectedProduct!!.buyingCost * profile.conversionFactor)).toString()
+                                },
+                                testTag = "purchase_profile_${profile.unitName}"
+                            )
                         }
                     }
                 }
@@ -354,36 +414,37 @@ fun NewPurchaseDialog(
                     }
                 }
 
-                FuturisticButton(
-                    text = "Confirm & Receive Stock",
-                    icon = Icons.Default.Check,
-                    enabled = selectedProduct != null && quantity > 0 && unitPrice > 0,
-                    onClick = {
-                        coroutineScope.launch {
-                            val purchase = Purchase(
-                                invoiceNumber = invoiceNumber,
-                                supplierId = selectedSupplier?.id ?: 0L,
-                                supplierName = selectedSupplier?.name ?: "Direct Supplier",
-                                totalAmount = totalCost,
-                                itemsCount = 1,
-                                staffName = "Staff"
-                            )
-                            val purchaseItem = PurchaseItem(
-                                purchaseId = 0,
-                                productId = selectedProduct!!.id,
-                                productName = selectedProduct!!.name,
-                                unitName = unitName,
-                                quantity = quantity,
-                                costPerUnit = unitPrice,
-                                totalCost = totalCost,
-                                baseUnitsAdded = baseUnitsToAdd
-                            )
-                            viewModel.repository.receivePurchase(purchase, listOf(purchaseItem), "Staff")
-                            onComplete()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    DialogActionButton(
+                        text = "Receive Stock",
+                        icon = Icons.Default.Check,
+                        enabled = selectedProduct != null && quantity > 0 && unitPrice > 0,
+                        onClick = {
+                            coroutineScope.launch {
+                                val purchase = Purchase(
+                                    invoiceNumber = invoiceNumber,
+                                    supplierId = selectedSupplier?.id ?: 0L,
+                                    supplierName = selectedSupplier?.name ?: "Direct Supplier",
+                                    totalAmount = totalCost,
+                                    itemsCount = 1,
+                                    staffName = "Staff"
+                                )
+                                val purchaseItem = PurchaseItem(
+                                    purchaseId = 0,
+                                    productId = selectedProduct!!.id,
+                                    productName = selectedProduct!!.name,
+                                    unitName = unitName,
+                                    quantity = quantity,
+                                    costPerUnit = unitPrice,
+                                    totalCost = totalCost,
+                                    baseUnitsAdded = baseUnitsToAdd
+                                )
+                                viewModel.repository.receivePurchase(purchase, listOf(purchaseItem), "Staff")
+                                onComplete()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

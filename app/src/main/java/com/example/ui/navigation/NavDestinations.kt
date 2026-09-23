@@ -1,10 +1,9 @@
 package com.example.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -51,9 +50,8 @@ sealed class Screen(val route: String) {
 }
 
 enum class MainTab(val title: String, val icon: ImageVector, val route: String, val tag: String) {
-    HOME("Dashboard", Icons.Default.Dashboard, Screen.Home.route, "nav_home"),
+    HOME("Home", Icons.Default.Home, Screen.Home.route, "nav_home"),
     POS("POS", Icons.Default.PointOfSale, Screen.Pos.route, "nav_pos"),
     INVENTORY("Inventory", Icons.Default.Inventory2, Screen.Inventory.route, "nav_inventory"),
-    REPORTS("Reports", Icons.Default.BarChart, Screen.Reports.route, "nav_reports"),
-    MORE("More", Icons.Default.Menu, Screen.More.route, "nav_more")
+    MORE("More", Icons.Default.MoreHoriz, Screen.More.route, "nav_more")
 }
